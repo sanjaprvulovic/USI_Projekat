@@ -1,0 +1,20 @@
+created:
+    - app/Http/Controllers/PrIjavaController.php
+    - tests/Feature/Http/Controllers/PrIjavaControllerTest.php
+    - app/Http/Requests/PrIjavaStoreRequest.php
+    - app/Http/Requests/PrIjavaUpdateRequest.php
+    - resources/views/prIjava/index.blade.php
+    - resources/views/prIjava/create.blade.php
+    - resources/views/prIjava/show.blade.php
+    - resources/views/prIjava/edit.blade.php
+updated:
+    - routes/web.php
+models:
+    Degustacija: { Naziv: string, Datum: datetime, Lokacija: string, Kapacitet: integer, user_id: 'biginteger unsigned', status_degustacija_id: 'biginteger unsigned' }
+    DegustacijaPaket: { DegustacijaID: 'biginteger unsigned', degustacija_id: 'biginteger unsigned', degustacioni_paket_id: 'biginteger unsigned' }
+    DegustacioniPaket: { NazivPaketa: string, Cena: integer, Opis: text }
+    PrIjava: { Datum: datetime, status_prijava_id: 'biginteger unsigned', degustacija_id: 'biginteger unsigned', user_id: 'biginteger unsigned', degustacioni_paket_id: 'biginteger unsigned' }
+    Role: { Naziv: string }
+    StatusDegustacija: { Naziv: string }
+    StatusPrijava: { Naziv: string }
+    User: { name: string, surname: string, email: string, phone: string, email_verified_at: 'timestamp nullable default:NULL', password: string, remember_token: 'string:100 nullable default:NULL', role_id: 'biginteger unsigned' }

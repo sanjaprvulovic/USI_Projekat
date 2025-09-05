@@ -1,0 +1,9 @@
+controllers: 
+  Degustacija:
+      resource
+  Role:
+      resource
+  DegustacioniPaket:
+      resource
+  PrIjava:
+    resource
