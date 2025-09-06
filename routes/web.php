@@ -44,6 +44,9 @@ Route::middleware(['auth','can:managerOrAdmin'])->group(function () {
     Route::post('/degustacije',         [DegustacijaController::class,'store'])->name('degustacijas.store');
     Route::get('/degustacije/{degustacija}/edit', [DegustacijaController::class,'edit'])->name('degustacijas.edit');
     Route::put('/degustacije/{degustacija}',      [DegustacijaController::class,'update'])->name('degustacijas.update');
+
+    Route::get('degustacijas/{degustacija}/paketi',  [DegustacijaController::class, 'paketi'])->name('degustacijas.paketi');
+    Route::put('degustacijas/{degustacija}/paketi',  [DegustacijaController::class, 'paketiUpdate'])->name('degustacijas.paketi.update');
 });
 
 Route::delete('/degustacije/{degustacija}', [DegustacijaController::class, 'destroy'])
@@ -54,6 +57,13 @@ Route::resource('paketi', DegustacioniPaketController::class)
     ->names('degustacioni-pakets')
     ->parameters(['paketi' => 'degustacioni_paket'])
     ->middleware(['auth','can:admin']);
+
+
+
+// // ADMIN: kompletan CRUD za pakete
+// Route::resource('degustacioni-pakets', DegustacioniPaketController::class)
+//     ->middleware(['auth','can:admin']);  // imena ruta: degustacioni-pakets.*
+
 
 Route::resource('prijave', PrIjavaController::class)
     ->only(['index','store','destroy']) // index: klijent/menadžer pogled; store: prijava; destroy: otkaz

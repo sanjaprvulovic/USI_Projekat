@@ -26,4 +26,14 @@ class DegustacioniPaket extends Model
     {
         return $this->hasMany(PrIjava::class);
     }
+
+    public function degustacije()
+    {
+        return $this->belongsToMany(
+            \App\Models\Degustacija::class, // ciljni model
+            'degustacija_pakets',           // pivot tabela
+            'degustacioni_paket_id',        // FK na ovaj model u pivotu
+            'degustacija_id'                // FK na degustaciju u pivotu
+        )->withTimestamps();
+    }
 }

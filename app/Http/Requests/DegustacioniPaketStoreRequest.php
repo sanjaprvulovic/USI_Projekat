@@ -6,23 +6,28 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class DegustacioniPaketStoreRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('admin') ?? false;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     */
     public function rules(): array
     {
         return [
-            'NazivPaketa' => ['required', 'string'],
-            'Cena' => ['required', 'integer'],
-            'Opis' => ['required', 'string'],
+            'NazivPaketa' => ['required','string','max:255','unique:degustacioni_pakets,NazivPaketa'],
+            'Cena'        => ['required','numeric','min:0'],
+            'Opis'        => ['nullable','string','max:2000'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'NazivPaketa.required' => 'Unesite naziv paketa.',
+            'NazivPaketa.unique'   => 'Paket sa tim nazivom već postoji.',
+            'Cena.required'        => 'Unesite cenu.',
+            'Cena.numeric'         => 'Cena mora biti broj.',
+            'Cena.min'             => 'Cena ne može biti negativna.',
         ];
     }
 }

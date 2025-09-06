@@ -2,66 +2,72 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DegustacioniPaket;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 use App\Http\Requests\DegustacioniPaketStoreRequest;
 use App\Http\Requests\DegustacioniPaketUpdateRequest;
-use App\Models\DegustacioniPaket;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\View\View;
 
 class DegustacioniPaketController extends Controller
 {
-    public function index(Request $request): View
+    public function __construct()
     {
-        $degustacioniPakets = DegustacioniPaket::all();
-
-        return view('degustacioniPaket.index', [
-            'degustacioniPakets' => $degustacioniPakets,
-        ]);
+        // dodatna zaštita (pored middleware-a u web.php)
+        $this->middleware(['auth','can:admin']);
     }
 
-    public function create(Request $request): View
+    public function index(): View
+    {
+        $paketi = DegustacioniPaket::orderBy('NazivPaketa')->get();
+        return view('degustacioniPaket.index', compact('paketi'));
+    }
+
+    public function create(): View
     {
         return view('degustacioniPaket.create');
     }
 
     public function store(DegustacioniPaketStoreRequest $request): RedirectResponse
     {
-        $degustacioniPaket = DegustacioniPaket::create($request->validated());
+        $data = $request->validated();
 
-        $request->session()->flash('degustacioniPaket.id', $degustacioniPaket->id);
-
-        return redirect()->route('degustacioniPakets.index');
-    }
-
-    public function show(Request $request, DegustacioniPaket $degustacioniPaket): View
-    {
-        return view('degustacioniPaket.show', [
-            'degustacioniPaket' => $degustacioniPaket,
+        DegustacioniPaket::create([
+            'NazivPaketa' => $data['NazivPaketa'],
+            'Cena'        => $data['Cena'],
+            'Opis'        => $data['Opis'] ?? null,
         ]);
+
+        return redirect()
+            ->route('degustacioni-pakets.index')
+            ->with('success', 'Paket je uspešno kreiran.');
     }
 
-    public function edit(Request $request, DegustacioniPaket $degustacioniPaket): View
+    public function edit(DegustacioniPaket $degustacioni_paket): View
     {
-        return view('degustacioniPaket.edit', [
-            'degustacioniPaket' => $degustacioniPaket,
+        return view('degustacioniPaket.edit', compact('degustacioni_paket'));
+    }
+
+    public function update(DegustacioniPaketUpdateRequest $request, DegustacioniPaket $degustacioni_paket): RedirectResponse
+    {
+        $data = $request->validated();
+
+        $degustacioni_paket->update([
+            'NazivPaketa' => $data['NazivPaketa'],
+            'Cena'        => $data['Cena'],
+            'Opis'        => $data['Opis'] ?? null,
         ]);
+
+        return redirect()
+            ->route('degustacioni-pakets.index')
+            ->with('success', 'Paket je uspešno ažuriran.');
     }
 
-    public function update(DegustacioniPaketUpdateRequest $request, DegustacioniPaket $degustacioniPaket): RedirectResponse
+    public function destroy(DegustacioniPaket $degustacioni_paket): RedirectResponse
     {
-        $degustacioniPaket->update($request->validated());
+        $degustacioni_paket->delete();
 
-        $request->session()->flash('degustacioniPaket.id', $degustacioniPaket->id);
-
-        return redirect()->route('degustacioniPakets.index');
-    }
-
-    public function destroy(Request $request, DegustacioniPaket $degustacioniPaket): RedirectResponse
-    {
-        $degustacioniPaket->delete();
-
-        return redirect()->route('degustacioniPakets.index');
+        return redirect()
+            ->route('degustacioni-pakets.index')
+            ->with('success', 'Paket je obrisan.');
     }
 }

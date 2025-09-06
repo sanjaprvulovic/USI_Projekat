@@ -6,26 +6,36 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class DegustacijaStoreRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return true;
+        // dozvoli samo menadžeru događaja ili administratoru
+        return $this->user()?->can('managerOrAdmin') ?? false;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     */
     public function rules(): array
     {
         return [
-            'Naziv' => ['required', 'string'],
-            'Datum' => ['required'],
-            'Lokacija' => ['required', 'string'],
-            'Kapacitet' => ['required', 'integer'],
-            'user_id' => ['required', 'integer'],
-            'status_degustacija_id' => ['required', 'integer'],
+            'Naziv'     => ['required','string','max:255'],
+            // <input type="datetime-local"> vraća ISO format koji prolazi kao 'date'
+            'Datum'     => ['required','date','after:now'],
+            'Lokacija'  => ['required','string','max:255'],
+            'Kapacitet' => ['required','integer','min:1'],
+
+            // NEMOJ tražiti ovo iz forme – postavlja se u kontroleru
+            // 'user_id'               => ...
+            // 'status_degustacija_id' => ...
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'Naziv.required'     => 'Unesite naziv degustacije.',
+            'Datum.required'     => 'Unesite datum i vreme.',
+            'Datum.after'        => 'Datum mora biti u budućnosti.',
+            'Lokacija.required'  => 'Unesite lokaciju.',
+            'Kapacitet.required' => 'Unesite kapacitet.',
+            'Kapacitet.min'      => 'Kapacitet mora biti najmanje 1.',
         ];
     }
 }

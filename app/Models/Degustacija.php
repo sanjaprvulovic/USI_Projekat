@@ -35,6 +35,15 @@ class Degustacija extends Model
     {
         return $this->belongsTo(StatusDegustacija::class);
     }
+    public function paketi()
+    {
+        return $this->belongsToMany(
+            \App\Models\DegustacioniPaket::class, // cilj model
+            'degustacija_pakets',                 // pivot tabela
+            'degustacija_id',                     // FK na degustaciju u pivotu
+            'degustacioni_paket_id'               // FK na paket u pivotu
+        )->withTimestamps();
+    }
 
     public function degustacijaPakets()
     {
