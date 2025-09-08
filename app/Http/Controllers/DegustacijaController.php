@@ -17,8 +17,11 @@ class DegustacijaController extends Controller
     {
         // index + show su javni; ostalo samo ulogovani
         $this->middleware('auth')->except(['index', 'show']);
-        // kreiranje/izmena/brisanje samo Menadžer dogadjaja ili Administrator
-        $this->middleware('can:managerOrAdmin')->only(['create','store','edit','update','destroy','paketi','paketiUpdate']);
+
+        // kreiranje/izmena/brisanje/dodela paketa → Menadžer dogadjaja ili Administrator
+        $this->middleware('can:managerOrAdmin')->only([
+            'create','store','edit','update','destroy','paketi','paketiUpdate'
+        ]);
     }
 
     /**
@@ -26,11 +29,12 @@ class DegustacijaController extends Controller
      */
     public function index(Request $request): View
     {
-        $degustacijas = Degustacija::orderBy('Datum')->get();
+        $degustacijas = Degustacija::withCount('aktivnePrijave')
+            ->with(['paketi'])
+            ->latest('Datum')
+            ->get();
 
-        return view('degustacija.index', [
-            'degustacijas' => $degustacijas,
-        ]);
+        return view('degustacija.index', compact('degustacijas'));
     }
 
     /**
@@ -38,6 +42,9 @@ class DegustacijaController extends Controller
      */
     public function show(Degustacija $degustacija): View
     {
+        // učitaj pakete dodeljene ovoj degustaciji
+        $degustacija->load('paketi');
+
         return view('degustacija.show', compact('degustacija'));
     }
 
@@ -93,7 +100,6 @@ class DegustacijaController extends Controller
             'Datum'     => $data['Datum'],
             'Lokacija'  => $data['Lokacija'],
             'Kapacitet' => $data['Kapacitet'],
-            // user_id i status obično ne menjamo ovde; po potrebi dodaj
         ]);
 
         return redirect()
@@ -114,8 +120,8 @@ class DegustacijaController extends Controller
     }
 
     /**
-     * (Opcionalno) Dodela paketa degustaciji – forma (manager/admin)
-     * Ruta: GET degustacijas/{degustacija}/paketi
+     * Forma za dodelu paketa (manager/admin)
+     * GET degustacijas/{degustacija}/paketi
      */
     public function paketi(Degustacija $degustacija): View
     {
@@ -126,13 +132,13 @@ class DegustacijaController extends Controller
     }
 
     /**
-     * (Opcionalno) Snimi dodelu paketa (manager/admin)
-     * Ruta: PUT degustacijas/{degustacija}/paketi
+     * Snimi dodelu paketa (manager/admin)
+     * PUT degustacijas/{degustacija}/paketi
      */
     public function paketiUpdate(Request $request, Degustacija $degustacija): RedirectResponse
     {
         $ids = $request->input('paketi', []);   // niz ID-jeva checkbox-ova
-        $degustacija->paketi()->sync($ids);     // magija: doda/ukloni što treba
+        $degustacija->paketi()->sync($ids);
 
         return redirect()
             ->route('degustacijas.show', $degustacija)
