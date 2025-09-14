@@ -16,89 +16,95 @@ use App\Http\Controllers\RoleController;
 
 Route::get('/', function () {
     return auth()->check()
-        ? redirect()->route('degustacijas.index')   // ime rute po Blueprint konvenciji
+        ? redirect()->route('degustacijas.index')   
         : redirect()->route('login');
 })->name('root');
 
 Auth::routes();
 
-/*
- * JAVNO: lista i detalj degustacija
- * URL: /degustacije
- * Imena ruta: degustacijas.index, degustacijas.show
- */
 Route::resource('degustacije', DegustacijaController::class)
     ->only(['index','show'])
     ->names('degustacijas')
     ->parameters(['degustacije' => 'degustacija']);
 
-/*
- * MENADŽER/ADMIN: kreiranje/izmena degustacija + dodela paketa
- */
-Route::middleware(['auth','can:managerOrAdmin'])->group(function () {
+
+Route::middleware(['auth','can:manager'])->group(function () {
     Route::get('/degustacije/create',                   [DegustacijaController::class,'create'])->name('degustacijas.create');
     Route::post('/degustacije',                         [DegustacijaController::class,'store'])->name('degustacijas.store');
-    Route::get('/degustacije/{degustacija}/edit',       [DegustacijaController::class,'edit'])->name('degustacijas.edit');
-    Route::put('/degustacije/{degustacija}',            [DegustacijaController::class,'update'])->name('degustacijas.update');
 
-    // dodela/snimanje paketa za konkretnu degustaciju
     Route::get('degustacijas/{degustacija}/paketi',     [DegustacijaController::class, 'paketi'])->name('degustacijas.paketi');
     Route::put('degustacijas/{degustacija}/paketi',     [DegustacijaController::class, 'paketiUpdate'])->name('degustacijas.paketi.update');
 });
 
-/*
- * ADMIN: brisanje degustacije
- */
+
+Route::middleware(['auth','can:managerOrAdmin'])->group(function () {
+    Route::get('/degustacije/{degustacija}/edit',       [DegustacijaController::class,'edit'])->name('degustacijas.edit');
+    Route::put('/degustacije/{degustacija}',            [DegustacijaController::class,'update'])->name('degustacijas.update');
+
+    Route::put('/degustacije/{degustacija}/finish',     [DegustacijaController::class,'finish'])->name('degustacijas.finish');
+    Route::put('/degustacije/{degustacija}/cancel',     [DegustacijaController::class,'cancel'])->name('degustacijas.cancel');
+
+    Route::delete('/degustacije/{degustacija}',         [DegustacijaController::class,'destroy'])->name('degustacijas.destroy');
+});
+
+
+
 Route::delete('/degustacije/{degustacija}', [DegustacijaController::class, 'destroy'])
     ->middleware(['auth','can:admin'])
     ->name('degustacijas.destroy');
 
-/*
- * ADMIN: kompletan CRUD za PAKETE
- * URL: /paketi
- * Imena ruta: degustacioni-pakets.*
- */
+
 Route::resource('paketi', DegustacioniPaketController::class)
     ->names('degustacioni-pakets')
     ->parameters(['paketi' => 'degustacioni_paket'])
     ->middleware(['auth','can:admin']);
 
-/*
- * PRIJAVE (klijent i menadžer/admin)
- */
-Route::middleware(['auth'])->group(function () {
-    // moje prijave (lista)
-    Route::get('/moje-prijave', [PrIjavaController::class,'index'])->name('prIjavas.index');
 
-    // klijent šalje prijavu za konkretnu degustaciju (forma iz show.blade)
-    // <form action="{{ route('prIjavas.store', $degustacija) }}" method="POST">
+Route::middleware(['auth'])->group(function () {
+    Route::get('/moje-prijave', [PrIjavaController::class,'index'])->name('prIjavas.index');
+    
     Route::post('/degustacije/{degustacija}/prijave', [PrIjavaController::class,'store'])
         ->name('prIjavas.store');
 
-    // otkaz prijave (menja status u Otkazana)
     Route::delete('/prijave/{prijava}', [PrIjavaController::class,'destroy'])
         ->name('prIjave.destroy');
+    
+    Route::put('/prijave/{prijava}', [PrIjavaController::class,'update'])
+    ->name('prIjave.update');
 });
 
-// MENADŽER / ADMIN – pregled prijava za degustaciju + promene statusa
+
 Route::middleware(['auth','can:managerOrAdmin'])->group(function () {
-    Route::get('/degustacije/{degustacija}/prijave', [PrIjavaController::class,'forDegustacija'])
-        ->name('prIjavas.forDegustacija');
-
-    Route::put('/prijave/{prijava}/status', [PrIjavaController::class,'updateStatus'])
-        ->name('prIjavas.updateStatus');
-
-    Route::put('/prijave/{prijava}/approve', [PrIjavaController::class, 'approve'])
-        ->name('prIjavas.approve');
-
-    Route::put('/prijave/{prijava}/reject', [PrIjavaController::class, 'reject'])
-        ->name('prIjavas.reject');
+    Route::get('/degustacije/{degustacija}/prijave',
+        [PrIjavaController::class,'forDegustacija']
+    )->name('prIjavas.forDegustacija');
 });
 
-/*
- * Uloge (ako koristiš)
- */
-Route::resource('roles', RoleController::class);
+Route::middleware(['auth','can:manager'])->group(function () {
+    Route::put('/prijave/{prijava}/status',
+        [PrIjavaController::class,'updateStatus']
+    )->name('prIjavas.updateStatus');
+
+    Route::put('/prijave/{prijava}/approve',
+        [PrIjavaController::class,'approve']
+    )->name('prIjavas.approve');
+
+    Route::put('/prijave/{prijava}/reject',
+        [PrIjavaController::class,'reject']
+    )->name('prIjavas.reject');
+
+    Route::put('/prijave/{prijava}/check-in',
+        [PrIjavaController::class,'checkIn']
+    )->name('prIjavas.checkIn');
+});
+
+Route::middleware(['auth','can:admin'])->group(function () {
+    Route::get('/admin/users', [RoleController::class, 'manageUsers'])->name('admin.users.index');
+    Route::put('/admin/users/{user}/role', [RoleController::class, 'updateUserRole'])->name('admin.users.updateRole');
+    Route::resource('roles', RoleController::class);
+
+});
+
 
 
 

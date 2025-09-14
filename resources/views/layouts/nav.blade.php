@@ -1,4 +1,3 @@
-{{-- GOST: veliki centrirani logo --}}
 @guest
 <nav class="navbar navbar-dark beer-navbar beer-navbar-guest py-4 sticky-top">
   <div class="container d-flex justify-content-center">
@@ -9,7 +8,7 @@
 </nav>
 @endguest
 
-{{-- ULOGOVANI: logo levo, linkovi desno-centrirani, odjava skroz desno --}}
+
 @auth
 @php
   $active = fn($pat) => request()->routeIs($pat) ? 'active' : '';
@@ -18,18 +17,18 @@
 <nav class="navbar navbar-expand-lg navbar-dark beer-navbar sticky-top">
   <div class="container-xxl">
 
-    {{-- 1) LOGO ─ potpuno levo --}}
+    
     <a class="navbar-brand beer-brand order-1 me-2 me-lg-3" href="{{ route('degustacijas.index') }}">
       <img src="{{ asset('images/logo_white_letters.png') }}" alt="ES Pivara" style="height:56px">
     </a>
 
-    {{-- Toggler za mobilni --}}
+    
     <button class="navbar-toggler order-4 ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
             aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    {{-- 2) MENI LINKOVI ─ jedan red, pomereno ka desnoj strani (bliže „Odjava“) --}}
+    
     <div class="collapse navbar-collapse order-2 ms-lg-auto me-lg-4 flex-grow-0" id="mainNav">
       <ul class="navbar-nav align-items-lg-center mb-2 mb-lg-0">
         <li class="nav-item position-relative">
@@ -44,14 +43,14 @@
         </li>
         @endcan
 
-        @can('managerOrAdmin')
+        @can('manager')
         <li class="nav-item position-relative">
           <a class="nav-link beer-nav-link {{ $active('degustacijas.create') }}"
              href="{{ route('degustacijas.create') }}">Nova degustacija</a>
         </li>
         @endcan
 
-        @can('admin')
+        {{-- @can('admin')
         <li class="nav-item position-relative">
           <a class="nav-link beer-nav-link {{ $active('degustacioni-pakets.*') }}"
              href="{{ route('degustacioni-pakets.index') }}">Paketi</a>
@@ -60,11 +59,22 @@
           <a class="nav-link beer-nav-link {{ $active('roles.*') }}"
              href="{{ route('roles.index') }}">Uloge</a>
         </li>
+        @endcan --}}
+
+        @can('admin')
+        <li class="nav-item position-relative">
+            <a class="nav-link beer-nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
+            href="{{ route('admin.users.index') }}">Korisnici</a>
+        </li>
+        <li class="nav-item position-relative">
+          <a class="nav-link beer-nav-link {{ $active('degustacioni-pakets.*') }}"
+             href="{{ route('degustacioni-pakets.index') }}">Paketi</a>
+        </li>
         @endcan
       </ul>
     </div>
 
-    {{-- 3) ODJAVA ─ skroz desno, uvek vidljivo --}}
+    
     <div class="order-3 d-flex align-items-center ms-lg-0">
       <span class="navbar-text me-2 d-none d-lg-inline" style="color:#e9e3d6; font-weight:800">
         {{ auth()->user()->name }}

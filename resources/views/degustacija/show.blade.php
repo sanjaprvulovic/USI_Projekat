@@ -3,8 +3,6 @@
 
 @section('content')
 <div class="container-xxl my-4">
-
-  {{-- ====== Header sa osnovnim informacijama + akcije ====== --}}
   <div class="card beer-card mb-4">
     <div class="card-body d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3">
       <div>
@@ -28,7 +26,6 @@
             </span>
           @endif
 
-          {{-- Preostala mesta / Popunjeno (ako postoje metode u modelu) --}}
           @php
             $hasRemaining = method_exists($degustacija,'remainingCapacity');
             $remaining = $hasRemaining ? $degustacija->remainingCapacity() : null;
@@ -43,7 +40,7 @@
         </div>
       </div>
 
-      {{-- Akcije desno --}}
+      
       <div class="d-flex flex-wrap gap-2">
         <a href="{{ route('degustacijas.index') }}" class="btn btn-outline-secondary">Nazad</a>
 
@@ -51,12 +48,25 @@
           <a href="{{ route('degustacijas.edit', $degustacija) }}" class="btn btn-outline-secondary">
             Izmeni
           </a>
+        @endcan
+
+        @can('manager')
           <a href="{{ route('degustacijas.paketi', $degustacija) }}" class="btn btn-amber">
             Dodeli pakete
           </a>
+        @endcan
+
+        @can('managerOrAdmin')
           <a href="{{ route('prIjavas.forDegustacija', $degustacija) }}" class="btn btn-outline-secondary">
             Prijave
           </a>
+          @if(optional($degustacija->statusDegustacija)->Naziv !== 'Završena')
+            <form method="POST" action="{{ route('degustacijas.finish', $degustacija) }}" class="d-inline"
+                  onsubmit="return confirm('Označiti degustaciju kao završenu?')">
+              @csrf @method('PUT')
+              <button class="btn btn-outline-success">Označi kao završenu</button>
+            </form>
+          @endif
         @endcan
 
         @can('admin')
@@ -71,7 +81,6 @@
   </div>
 
   @php
-    // Pribavi listu paketa dodeljenih ovoj degustaciji (radi i sa pivot modelom)
     $paketiLista = collect();
     if (isset($paketi)) {
         $paketiLista = collect($paketi); // ako ih je kontroler poslao
@@ -83,12 +92,11 @@
   @endphp
 
   <div class="row g-4">
-    {{-- ====== Levo: lista dodeljenih paketa ====== --}}
     <div class="col-lg-8">
       <div class="card beer-card h-100">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="mb-0">Dostupni degustacioni paketi</h5>
-          @can('managerOrAdmin')
+          @can('manager')
             <a href="{{ route('degustacijas.paketi', $degustacija) }}" class="btn btn-sm btn-outline-secondary">
               Uredi pakete
             </a>
@@ -99,7 +107,7 @@
           @if($paketiLista->isEmpty())
             <div class="alert alert-warning mb-0">
               Trenutno nisu dodeljeni paketi za ovu degustaciju.
-              @can('managerOrAdmin') Dodeli pakete klikom na „Uredi pakete“. @endcan
+              @can('manager') Dodeli pakete klikom na „Uredi pakete“. @endcan
             </div>
           @else
             <div class="row g-3">
@@ -126,7 +134,6 @@
       </div>
     </div>
 
-    {{-- ====== Desno: forma za prijavu (samo klijent) ====== --}}
     <div class="col-lg-4">
       <div class="card beer-card">
         <div class="card-body p-4">

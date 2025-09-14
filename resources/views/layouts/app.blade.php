@@ -22,14 +22,14 @@
     <!-- Tema “Pivara” -->
     <style>
       :root{
-        --beer-dark:#1a1410;            /* tamno braon */
+        --beer-dark:#1a1410;            
         --beer-dark-2:#17110d;
-        --beer-ink:#2a1c15;             /* tamni tekst */
-        --beer-amber:#e0a12b;           /* zlatna */
+        --beer-ink:#2a1c15;             
+        --beer-amber:#e0a12b;           
         --beer-amber-2:#c97a28;
-        --beer-amber-light:#fde9b8;     /* svetla narandžasta pozadina */
+        --beer-amber-light:#fde9b8;     
         --beer-amber-light-2:#f8d996;
-        --beer-muted:#6c5840;           /* prigušen tekst */
+        --beer-muted:#6c5840;           
       }
 
       /* Globalno */
@@ -101,10 +101,10 @@
   </head>
 
   <body>
-    <div id="app" class="d-flex flex-column min-vh-100"><!-- OVDE je flex kolona -->
+    <div id="app" class="d-flex flex-column min-vh-100">
       @include('layouts.nav')
 
-      <main class="py-4 flex-grow-1"><!-- zauzmi preostalu visinu -->
+      <main class="py-4 flex-grow-1">
         @yield('content')
       </main>
 

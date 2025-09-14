@@ -17,6 +17,8 @@ class PrIjava extends Model
         'degustacija_id',
         'user_id',
         'degustacioni_paket_id',
+        'prisutan',
+        'checked_in_at',
     ];
 
     protected $searchableFields = ['*'];
@@ -25,6 +27,8 @@ class PrIjava extends Model
 
     protected $casts = [
         'Datum' => 'datetime',
+        'prisutan' => 'boolean',
+        'checked_in_at' => 'datetime',
     ];
 
     public function statusPrijava()

@@ -2,7 +2,7 @@
 
 @section('content')
 <style>
-  /* Pivara tema – lokalno za ovu stranicu */
+  
   .auth-wrap{min-height:80vh;display:flex;align-items:center}
   .auth-card{
     background:linear-gradient(180deg,#1a1410,#17110d);
@@ -41,7 +41,6 @@
     <div class="col-12 col-md-8 col-lg-6 col-xl-5">
       <div class="auth-card">
         <div class="auth-header">
-          {{-- stavi svoju putanju ako je drugačija --}}
           <img src="{{ asset('images/logo.webp') }}" alt="ES Pivara">
           <h1 class="h4 auth-title">Dobrodošli</h1>
           <p class="small muted mb-0">Prijavite se za nastavak</p>

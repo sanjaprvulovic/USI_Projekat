@@ -10,7 +10,7 @@
 
         <h1 class="h3 mb-4 fw-bold">Izmena degustacije</h1>
 
-        {{-- greške validacije --}}
+        
         @if ($errors->any())
           <div class="alert alert-danger">
             <ul class="mb-0">

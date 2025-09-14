@@ -20,7 +20,6 @@ class Degustacija extends Model
         'status_degustacija_id',
     ];
 
-    // učitaj status da izbegnemo N+1
     protected $with = ['statusDegustacija'];
 
     protected $searchableFields = ['*'];
@@ -28,10 +27,6 @@ class Degustacija extends Model
     protected $casts = [
         'Datum' => 'datetime',
     ];
-
-    /* =========================
-     | Relacije
-     |=========================*/
 
     public function user()
     {
@@ -43,22 +38,17 @@ class Degustacija extends Model
         return $this->belongsTo(StatusDegustacija::class);
     }
 
-    /**
-     * Paketi kroz pivot (preporučeno za dodelu/sync).
-     */
     public function paketi()
     {
         return $this->belongsToMany(
-            DegustacioniPaket::class,   // model paketa
-            'degustacija_pakets',       // pivot tabela
-            'degustacija_id',           // FK na degustaciju
-            'degustacioni_paket_id'     // FK na paket
+            DegustacioniPaket::class,   
+            'degustacija_pakets',      
+            'degustacija_id',           
+            'degustacioni_paket_id'     
         )->withTimestamps();
     }
 
-    /**
-     * Ako koristiš eksplicitni pivot model (za dodatna polja u pivotu).
-     */
+    
     public function degustacijaPakets()
     {
         return $this->hasMany(DegustacijaPaket::class);
@@ -69,10 +59,6 @@ class Degustacija extends Model
         return $this->hasMany(PrIjava::class);
     }
 
-    /**
-     * Aktivne prijave (NIJE Otkazana/Odbijena) kao RELACIJA,
-     * da bismo mogli withCount('aktivnePrijave').
-     */
     public function aktivnePrijave()
     {
         return $this->prIjavas()
@@ -81,11 +67,7 @@ class Degustacija extends Model
             );
     }
 
-    /* =========================
-     | Helperi (kapacitet)
-     |=========================*/
 
-    // zadržavam tvoju postojeću query-metodu, nije obavezna ali ne smeta
     public function aktivnePrijaveQuery()
     {
         return $this->aktivnePrijave();
@@ -96,13 +78,11 @@ class Degustacija extends Model
         return $this->aktivnePrijave()->count();
     }
 
-    /**
-     * Preostalo mesta ili null ako kapacitet nije ograničen.
-     */
+    
     public function remainingCapacity(): ?int
     {
         if (is_null($this->Kapacitet)) {
-            return null; // neograničeno
+            return null; 
         }
         return max(0, $this->Kapacitet - $this->aktivnePrijaveCount());
     }

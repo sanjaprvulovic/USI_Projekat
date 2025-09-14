@@ -43,7 +43,7 @@ class LoginController extends Controller
         $role = optional($user->role)->Naziv; // 'Administrator' | 'Menadžer događaja' | 'Klijent'
 
         return match ($role) {
-            'Administrator'      => redirect()->route('roles.index'),
+            'Administrator'      => redirect()->route('degustacijas.index'),
             'Menadžer događaja'  => redirect()->route('degustacijas.index'),
             'Klijent'            => redirect()->route('degustacijas.index'),
             default              => redirect()->route('degustacijas.index'),

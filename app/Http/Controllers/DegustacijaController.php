@@ -10,60 +10,71 @@ use App\Models\DegustacioniPaket;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Gate;
 
 class DegustacijaController extends Controller
 {
     public function __construct()
     {
-        // index + show su javni; ostalo samo ulogovani
+        
         $this->middleware('auth')->except(['index', 'show']);
 
-        // kreiranje/izmena/brisanje/dodela paketa → Menadžer dogadjaja ili Administrator
+        
+        $this->middleware('can:manager')->only([
+            'create','store','paketi','paketiUpdate'
+        ]);
+
+        
         $this->middleware('can:managerOrAdmin')->only([
-            'create','store','edit','update','destroy','paketi','paketiUpdate'
+            'edit','update','destroy','finish','cancel'
         ]);
     }
 
-    /**
-     * Lista degustacija (javna)
-     */
+    
     public function index(Request $request): View
     {
-        $degustacijas = Degustacija::withCount('aktivnePrijave')
-            ->with(['paketi'])
-            ->latest('Datum')
-            ->get();
+        $query = Degustacija::withCount('aktivnePrijave')
+            ->with('paketi')
+            ->latest('Datum');
+
+        
+        if (!Gate::allows('managerOrAdmin')) {
+            $query->has('paketi'); // bar 1 paket
+        }
+
+        $degustacijas = $query->get();
 
         return view('degustacija.index', compact('degustacijas'));
     }
 
-    /**
-     * Detalj degustacije (javno)
-     */
-    public function show(Degustacija $degustacija): View
+    
+    public function show(Degustacija $degustacija): View | RedirectResponse
     {
-        // učitaj pakete dodeljene ovoj degustaciji
+        
         $degustacija->load('paketi');
+
+        
+        if (!Gate::allows('managerOrAdmin') && $degustacija->paketi->isEmpty()) {
+            return redirect()
+                ->route('degustacijas.index')
+                ->with('success', 'Ova degustacija trenutno nema dodeljene pakete.');
+        }
 
         return view('degustacija.show', compact('degustacija'));
     }
 
-    /**
-     * Forma za kreiranje (manager/admin)
-     */
+    
     public function create(): View
     {
         return view('degustacija.create');
     }
 
-    /**
-     * Snimi novu degustaciju (manager/admin)
-     */
+    
     public function store(DegustacijaStoreRequest $request): RedirectResponse
     {
         $data = $request->validated();
 
-        // status "Planirana" ako ne postoji
+        
         $statusId = StatusDegustacija::firstOrCreate(['Naziv' => 'Planirana'])->id;
 
         $degustacija = Degustacija::create([
@@ -80,17 +91,13 @@ class DegustacijaController extends Controller
             ->with('success', 'Degustacija je uspešno kreirana. Sada dodeli pakete ovoj degustaciji.');
     }
 
-    /**
-     * Forma za izmenu (manager/admin)
-     */
+    
     public function edit(Degustacija $degustacija): View
     {
         return view('degustacija.edit', compact('degustacija'));
     }
 
-    /**
-     * Ažuriraj degustaciju (manager/admin)
-     */
+    
     public function update(DegustacijaUpdateRequest $request, Degustacija $degustacija): RedirectResponse
     {
         $data = $request->validated();
@@ -107,9 +114,7 @@ class DegustacijaController extends Controller
             ->with('success', 'Degustacija je uspešno ažurirana.');
     }
 
-    /**
-     * Obriši degustaciju (manager/admin)
-     */
+    
     public function destroy(Degustacija $degustacija): RedirectResponse
     {
         $degustacija->delete();
@@ -119,10 +124,7 @@ class DegustacijaController extends Controller
             ->with('success', 'Degustacija je obrisana.');
     }
 
-    /**
-     * Forma za dodelu paketa (manager/admin)
-     * GET degustacijas/{degustacija}/paketi
-     */
+    
     public function paketi(Degustacija $degustacija): View
     {
         $sviPaketi = DegustacioniPaket::orderBy('NazivPaketa')->get();
@@ -131,10 +133,7 @@ class DegustacijaController extends Controller
         return view('degustacija.paketi', compact('degustacija','sviPaketi','odabrani'));
     }
 
-    /**
-     * Snimi dodelu paketa (manager/admin)
-     * PUT degustacijas/{degustacija}/paketi
-     */
+    
     public function paketiUpdate(Request $request, Degustacija $degustacija): RedirectResponse
     {
         $ids = $request->input('paketi', []);   // niz ID-jeva checkbox-ova
@@ -143,5 +142,53 @@ class DegustacijaController extends Controller
         return redirect()
             ->route('degustacijas.show', $degustacija)
             ->with('success', 'Paketi su uspešno sačuvani.');
+    }
+
+   
+    public function finish(Degustacija $degustacija): RedirectResponse
+    {
+        $status = optional($degustacija->statusDegustacija)->Naziv;
+
+        if ($status === 'Završena') {
+            return back()->with('success', 'Degustacija je već označena kao završena.');
+        }
+        if ($status === 'Otkazana') {
+            return back()->with('success', 'Otkazana degustacija se ne može označiti kao završena.');
+        }
+        if ($degustacija->Datum && now()->lt($degustacija->Datum)) {
+            return back()->with('success', 'Ne možeš završiti degustaciju pre njenog početka.');
+        }
+
+        $finishedId = StatusDegustacija::firstOrCreate(['Naziv' => 'Završena'])->id;
+
+        $degustacija->update([
+            'status_degustacija_id' => $finishedId,
+        ]);
+
+        return back()->with('success', 'Degustacija je označena kao završena.');
+    }
+
+    
+    public function cancel(Degustacija $degustacija): RedirectResponse
+    {
+        $status = optional($degustacija->statusDegustacija)->Naziv;
+
+        if ($status === 'Otkazana') {
+            return back()->with('success', 'Degustacija je već otkazana.');
+        }
+        if ($status === 'Završena') {
+            return back()->with('success', 'Završenu degustaciju nije moguće otkazati.');
+        }
+        if ($degustacija->Datum && now()->gte($degustacija->Datum)) {
+            return back()->with('success', 'Degustacija je već počela; otkazivanje nije moguće.');
+        }
+
+        $canceledId = StatusDegustacija::firstOrCreate(['Naziv' => 'Otkazana'])->id;
+
+        $degustacija->update([
+            'status_degustacija_id' => $canceledId,
+        ]);
+
+        return back()->with('success', 'Degustacija je označena kao otkazana.');
     }
 }

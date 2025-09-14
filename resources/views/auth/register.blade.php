@@ -2,7 +2,6 @@
 
 @section('content')
 <style>
-  /* Pivara tema – lokalno za ovu stranicu */
   .auth-wrap{min-height:80vh;display:flex;align-items:center}
   .auth-card{
     background:linear-gradient(180deg,#1a1410,#17110d);
